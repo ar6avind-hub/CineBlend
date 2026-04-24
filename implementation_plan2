@@ -1,0 +1,54 @@
+# Implement Real Authentication
+
+This plan outlines the steps to connect the existing mock Login and Register UI to your Supabase backend using `@supabase/ssr`. 
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Email Confirmations:** By default, Supabase requires users to confirm their email before they can fully log in. This plan assumes email confirmations are enabled and includes the setup of an `auth/callback` route to handle the verification link users will receive in their email. If you have disabled email confirmations in your Supabase dashboard, let me know, as the post-registration flow will be slightly different (immediate login vs. "check your email" message).
+
+## Proposed Changes
+
+### Auth Middleware & Routing
+
+To guarantee that the user's session is securely maintained throughout the website (and refreshed appropriately), we will add a Next.js `middleware.ts` and a callback route.
+
+#### [NEW] [middleware.ts](file:///C:/Users/DELL/Documents/cinelist/middleware.ts)
+- Implement Supabase's recommended session refresh using `@supabase/ssr` to ensure server components have access to the latest auth state.
+- Configure the matcher to run on relevant routes.
+
+#### [NEW] [app/api/auth/callback/route.ts](file:///C:/Users/DELL/Documents/cinelist/app/api/auth/callback/route.ts)
+- Create a route to exchange the secure auth `code` (sent to users in their email) for a live session cookie, then redirect them to the home page or a confirmation page.
+
+---
+
+### Authentication Pages
+
+We will swap out the `setTimeout` mocks with actual Supabase client invocations, capturing and displaying error/success messages.
+
+#### [MODIFY] [login/page.tsx](file:///C:/Users/DELL/Documents/cinelist/app/%28auth%29/login/page.tsx)
+- Import `createClient` from `@/lib/supabase/client`.
+- Add an `error` state string to display failed login attempts (e.g. wrong password).
+- Update `handleLogin` to call `await supabase.auth.signInWithPassword({ email, password })`.
+- On success, redirect the user to the `/explore` or Home page.
+
+#### [MODIFY] [register/page.tsx](file:///C:/Users/DELL/Documents/cinelist/app/%28auth%29/register/page.tsx)
+- Import `createClient` from `@/lib/supabase/client`.
+- Add `error` and `success` state strings.
+- Update `handleRegister` to call `await supabase.auth.signUp(...)` with the `username` passed into `options.data`.
+- On success, inform the user to check their email for a verification link (or redirect if email confirmation is disabled).
+
+---
+
+## Open Questions
+
+1. **Email Confirmation:** As mentioned above, is email confirmation enabled in your Supabase Auth settings?
+2. **Post-Login Redirection:** Right now, I plan to redirect users to the `/` (Home) page after a successful login. Is there a different page you prefer (e.g., `/explore` or their personal dashboard)?
+
+## Verification Plan
+
+### Manual Verification
+- We will manually submit the `/register` form, observe the UI update, and verify a user row is created in the Supabase `auth.users` table.
+- We will click the confirmation link in the email (if enabled) to test the callback route `/api/auth/callback`.
+- We will try logging in via `/login` with incorrect credentials to verify the error state displays correctly.
+- We will try logging in with correct credentials to verify the user is instantly redirected to the Home page and the session is stored in cookies.
