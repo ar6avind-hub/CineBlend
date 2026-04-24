@@ -15,8 +15,10 @@ const PRESET_AVATARS = [
 export default function LoginPage() {
   const supabase = createClient();
   const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"EMAIL" | "OTP">("EMAIL");
+  
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   
   const [selectedAvatar, setSelectedAvatar] = useState(PRESET_AVATARS[0]);
@@ -33,11 +35,10 @@ export default function LoginPage() {
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
-    setIsSuccess(false);
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -46,6 +47,7 @@ export default function LoginPage() {
           data: {
             avatar_url: selectedAvatar,
           },
+          // Keep the redirect URL just in case they click the link instead of using the code
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -53,7 +55,32 @@ export default function LoginPage() {
       if (error) {
         setErrorMsg(error.message);
       } else {
-        setIsSuccess(true);
+        setStep("OTP");
+      }
+    } catch (err) {
+      setErrorMsg("An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setErrorMsg("");
+
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: "email",
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+      } else {
+        // Successful login!
+        window.location.href = "/explore";
       }
     } catch (err) {
       setErrorMsg("An unexpected error occurred.");
@@ -71,18 +98,54 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">Welcome to CineBlend</h1>
-          <p className="text-zinc-400 text-sm">Sign in with a Magic Link</p>
+          <p className="text-zinc-400 text-sm">
+            {step === "EMAIL" ? "Sign in or Create an Account" : "Enter Verification Code"}
+          </p>
         </div>
 
-        {isSuccess ? (
-          <div className="bg-accent/10 border border-accent/20 rounded-xl p-6 text-center">
-            <h3 className="text-accent font-bold mb-2">Check your email!</h3>
-            <p className="text-sm text-zinc-300">
-              We sent a secure magic link to <strong>{email}</strong>. Click it to sign in instantly.
-            </p>
-          </div>
+        {step === "OTP" ? (
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 text-center mb-6">
+              <p className="text-sm text-zinc-300">
+                We sent a 6-digit code to <strong>{email}</strong>
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-1">6-Digit Code</label>
+              <input 
+                type="text" 
+                required 
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none text-center text-xl tracking-[0.5em] font-mono"
+                placeholder="000000"
+                maxLength={6}
+              />
+            </div>
+
+            {errorMsg && (
+              <p className="text-red-400 text-sm">{errorMsg}</p>
+            )}
+            
+            <button 
+              type="submit" 
+              disabled={isLoading || otp.length !== 6}
+              className="w-full h-12 bg-white text-black font-bold rounded-lg mt-6 hover:bg-zinc-200 transition-colors flex items-center justify-center disabled:opacity-70"
+            >
+              {isLoading ? "Verifying..." : "Verify & Sign In"}
+            </button>
+            
+            <button 
+              type="button"
+              onClick={() => setStep("EMAIL")}
+              className="w-full text-zinc-500 text-sm hover:text-white transition-colors mt-4"
+            >
+              Use a different email
+            </button>
+          </form>
         ) : (
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSendOtp} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-300 mb-3">Choose an Avatar</label>
               <div className="flex flex-wrap gap-3 mb-4">
@@ -144,7 +207,7 @@ export default function LoginPage() {
               disabled={isLoading || !email}
               className="w-full h-12 bg-white text-black font-bold rounded-lg mt-6 hover:bg-zinc-200 transition-colors flex items-center justify-center disabled:opacity-70"
             >
-              {isLoading ? "Sending Magic Link..." : "Send Magic Link"}
+              {isLoading ? "Sending Code..." : "Send Login Code"}
             </button>
           </form>
         )}
