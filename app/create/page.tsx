@@ -27,9 +27,14 @@ export default function CreatePlaylistPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      setIsLoadingAuth(false);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setIsLoadingAuth(false);
+      }
     };
     checkAuth();
   }, []);
