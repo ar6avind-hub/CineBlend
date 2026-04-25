@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const PRESET_AVATARS = [
@@ -13,6 +14,7 @@ const PRESET_AVATARS = [
 ];
 
 export default function LoginPage() {
+  const router = useRouter();
   const supabase = createClient();
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -80,7 +82,7 @@ export default function LoginPage() {
         setErrorMsg(error.message);
       } else {
         // Successful login!
-        window.location.href = "/explore";
+        router.push("/explore");
       }
     } catch (err) {
       setErrorMsg("An unexpected error occurred.");

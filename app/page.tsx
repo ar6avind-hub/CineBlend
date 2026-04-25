@@ -20,7 +20,7 @@ export default function Home() {
         </p>
         
         <div className="relative z-10 flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-          <Link href="/register" className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-zinc-200 transition-colors shadow-xl shadow-white/5 flex items-center justify-center gap-2">
+          <Link href="/login" className="h-12 px-8 rounded-full bg-white text-black font-semibold hover:bg-zinc-200 transition-colors shadow-xl shadow-white/5 flex items-center justify-center gap-2">
             Start Curating for Free
           </Link>
           <Link href="/explore" className="h-12 px-8 rounded-full bg-surface-light border border-white/10 text-white font-semibold hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
