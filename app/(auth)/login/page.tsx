@@ -71,29 +71,9 @@ export default function LoginPage() {
       }
 
       // Successful login/signup
-      router.push("/explore");
+      window.location.href = "/explore";
     } catch (err: any) {
       setErrorMsg(err.message || "An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setErrorMsg("Please enter your email first.");
-      return;
-    }
-    setIsLoading(true);
-    setErrorMsg("");
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-      if (error) throw error;
-      setErrorMsg("Password reset link sent! Please check your email.");
-    } catch (err: any) {
-      setErrorMsg(err.message || "Failed to send reset link.");
     } finally {
       setIsLoading(false);
     }
@@ -186,18 +166,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-zinc-300">Password</label>
-              {isLogin && (
-                <button 
-                  type="button" 
-                  onClick={handleForgotPassword}
-                  className="text-xs text-accent hover:underline"
-                >
-                  Forgot password?
-                </button>
-              )}
-            </div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1">Password</label>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"}
