@@ -79,6 +79,26 @@ export default function LoginPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setErrorMsg("Please enter your email first.");
+      return;
+    }
+    setIsLoading(true);
+    setErrorMsg("");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) throw error;
+      setErrorMsg("Password reset link sent! Please check your email.");
+    } catch (err: any) {
+      setErrorMsg(err.message || "Failed to send reset link.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 flex items-center justify-center p-4 py-12">
       <motion.div 
@@ -166,7 +186,18 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">Password</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-zinc-300">Password</label>
+              {isLogin && (
+                <button 
+                  type="button" 
+                  onClick={handleForgotPassword}
+                  className="text-xs text-accent hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"}

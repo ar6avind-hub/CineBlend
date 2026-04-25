@@ -114,7 +114,7 @@ export default function CreatePlaylistPage() {
 
       if (error) throw error;
       
-      router.push("/explore");
+      window.location.href = "/explore";
     } catch (err: any) {
       console.error("Error creating playlist", err);
       setErrorMessage(err.message || "Failed to create playlist. Check the database.");

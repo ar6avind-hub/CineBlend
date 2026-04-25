@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Search, PlusSquare, LogOut } from "lucide-react";
+import { Search, PlusSquare, LogOut, Film } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -21,7 +21,15 @@ export default function Navbar() {
           .eq('id', session.user.id)
           .single();
         
-        setUser(profile);
+        if (profile) {
+          setUser(profile);
+        } else {
+          setUser({
+            id: session.user.id,
+            username: session.user.user_metadata?.username || session.user.email?.split('@')[0],
+            avatar_url: session.user.user_metadata?.avatar_url
+          });
+        }
       }
     };
 
@@ -36,7 +44,16 @@ export default function Navbar() {
             .select('*')
             .eq('id', session.user.id)
             .single();
-          setUser(profile);
+            
+          if (profile) {
+            setUser(profile);
+          } else {
+            setUser({
+              id: session.user.id,
+              username: session.user.user_metadata?.username || session.user.email?.split('@')[0],
+              avatar_url: session.user.user_metadata?.avatar_url
+            });
+          }
         } else {
           setUser(null);
         }
@@ -59,13 +76,11 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 cursor-pointer">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent to-orange-500 flex items-center justify-center shadow-lg shadow-accent/20">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" className="w-5 h-5">
-              <path d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" />
-            </svg>
+        <Link href="/" className="flex items-center gap-2 cursor-pointer group">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent via-orange-400 to-red-500 flex items-center justify-center shadow-lg shadow-accent/20 group-hover:shadow-accent/40 transition-all">
+            <Film className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold tracking-tight text-xl text-white">Cine<span className="text-zinc-500">Blend</span></span>
+          <span className="font-bold tracking-tight text-2xl text-white">Cine<span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400">Blend</span></span>
         </Link>
 
         {/* Global Search */}

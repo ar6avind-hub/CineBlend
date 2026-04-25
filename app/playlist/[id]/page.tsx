@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Share2, Check } from "lucide-react";
+import { Share2, Check, MessageCircle, Twitter } from "lucide-react";
 import MovieCard from "@/components/ui/movie-card";
 
 export default function PlaylistDetail({ params }: { params: { id: string } }) {
@@ -49,6 +49,18 @@ export default function PlaylistDetail({ params }: { params: { id: string } }) {
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
+  };
+
+  const shareWhatsApp = () => {
+    const text = `Check out this playlist on CineBlend: ${playlist?.title}`;
+    const url = window.location.href;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + " " + url)}`, '_blank');
+  };
+
+  const shareTwitter = () => {
+    const text = `Check out "${playlist?.title}" on CineBlend!`;
+    const url = window.location.href;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
   };
 
   if (isLoading) {
@@ -104,7 +116,23 @@ export default function PlaylistDetail({ params }: { params: { id: string } }) {
       </section>
 
       {/* Action Bar */}
-      <div className="max-w-5xl mx-auto w-full px-4 md:px-6 py-4 border-b border-white/5 flex items-center justify-end">
+      <div className="max-w-5xl mx-auto w-full px-4 md:px-6 py-4 border-b border-white/5 flex items-center justify-end gap-3">
+        <button 
+          onClick={shareWhatsApp}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors text-[#25D366] font-medium"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span className="hidden sm:inline">WhatsApp</span>
+        </button>
+
+        <button 
+          onClick={shareTwitter}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 transition-colors text-[#1DA1F2] font-medium"
+        >
+          <Twitter className="w-4 h-4" />
+          <span className="hidden sm:inline">X</span>
+        </button>
+
         <button 
           onClick={handleShare}
           className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white font-medium"
@@ -117,7 +145,7 @@ export default function PlaylistDetail({ params }: { params: { id: string } }) {
           ) : (
             <>
               <Share2 className="w-4 h-4" />
-              <span>Share Playlist</span>
+              <span>Copy Link</span>
             </>
           )}
         </button>
