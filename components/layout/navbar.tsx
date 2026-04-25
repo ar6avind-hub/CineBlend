@@ -109,12 +109,12 @@ export default function Navbar() {
 
           {user ? (
             <div className="flex items-center gap-4 ml-2">
-              <div className="flex items-center gap-2 bg-surface border border-white/5 rounded-full py-1 pr-4 pl-1 shadow-inner">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10">
+              <Link href="/dashboard" className="flex items-center gap-2 bg-surface border border-white/5 hover:border-white/20 hover:bg-white/5 transition-all rounded-full py-1 pr-4 pl-1 shadow-inner cursor-pointer group">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 group-hover:border-accent/50 transition-colors">
                   <img src={user.avatar_url || `https://api.dicebear.com/8.x/notionists/svg?seed=${user.username}`} alt={user.username} className="w-full h-full object-cover" />
                 </div>
-                <span className="text-sm font-bold text-white hidden md:block">@{user.username}</span>
-              </div>
+                <span className="text-sm font-bold text-white hidden md:block group-hover:text-accent transition-colors">@{user.username}</span>
+              </Link>
               <button onClick={handleLogout} className="text-zinc-500 hover:text-red-400 transition-colors p-2 rounded-full hover:bg-white/5" title="Logout">
                 <LogOut className="w-5 h-5" />
               </button>
