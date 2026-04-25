@@ -1,5 +1,3 @@
-import { mockPlaylists } from "@/lib/mock-data";
-import PlaylistCard from "@/components/ui/playlist-card";
 import Link from "next/link";
 
 export default function Home() {
@@ -26,25 +24,6 @@ export default function Home() {
           <Link href="/explore" className="h-12 px-8 rounded-full bg-surface-light border border-white/10 text-white font-semibold hover:bg-white/5 transition-colors flex items-center justify-center gap-2">
             Explore Playlists
           </Link>
-        </div>
-      </section>
-
-      {/* Featured Curations */}
-      <section className="px-4 md:px-6 py-12 max-w-7xl mx-auto w-full">
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-white mb-2">Featured Curations</h2>
-            <p className="text-zinc-400">Discover handpicked collections from top cinephiles.</p>
-          </div>
-          <button className="hidden md:block text-accent font-medium hover:text-white transition-colors">
-            View All
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockPlaylists.map((playlist) => (
-            <PlaylistCard key={playlist.id} {...playlist} />
-          ))}
         </div>
       </section>
     </div>

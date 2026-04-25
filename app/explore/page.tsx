@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import PlaylistCard from "@/components/ui/playlist-card";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ExplorePage() {
+  const router = useRouter();
   const supabase = createClient();
   const [user, setUser] = useState<any>(null);
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -17,7 +19,13 @@ export default function ExplorePage() {
     const fetchData = async () => {
       // Get current user
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
+      
+      if (!session?.user) {
+        router.push("/login");
+        return;
+      }
+      
+      setUser(session.user);
 
       // Fetch all playlists with their curator profiles
       const { data, error } = await supabase
