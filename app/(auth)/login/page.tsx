@@ -16,9 +16,11 @@ const PRESET_AVATARS = [
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
+  
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"EMAIL" | "OTP">("EMAIL");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -37,55 +39,40 @@ export default function LoginPage() {
     }
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
 
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          data: {
-            avatar_url: selectedAvatar,
+      if (isLogin) {
+        // Sign In
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+      } else {
+        // Create Account
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username: username || email.split("@")[0],
+              avatar_url: selectedAvatar,
+            },
           },
-          // Keep the redirect URL just in case they click the link instead of using the code
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+        });
 
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        setStep("OTP");
+        if (error) throw error;
       }
-    } catch (err) {
-      setErrorMsg("An unexpected error occurred.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrorMsg("");
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: "email",
-      });
-
-      if (error) {
-        setErrorMsg(error.message);
-      } else {
-        // Successful login!
-        router.push("/explore");
-      }
-    } catch (err) {
-      setErrorMsg("An unexpected error occurred.");
+      // Successful login/signup
+      router.push("/explore");
+    } catch (err: any) {
+      setErrorMsg(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -99,120 +86,123 @@ export default function LoginPage() {
         className="w-full max-w-md bg-surface-light border border-white/10 rounded-2xl p-8 shadow-2xl"
       >
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Welcome to CineBlend</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            {isLogin ? "Welcome Back" : "Create an Account"}
+          </h1>
           <p className="text-zinc-400 text-sm">
-            {step === "EMAIL" ? "Sign in or Create an Account" : "Enter Verification Code"}
+            {isLogin ? "Sign in to continue curating" : "Join CineBlend today"}
           </p>
         </div>
 
-        {step === "OTP" ? (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 text-center mb-6">
-              <p className="text-sm text-zinc-300">
-                We sent a 6-digit code to <strong>{email}</strong>
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">6-Digit Code</label>
-              <input 
-                type="text" 
-                required 
-                value={otp}
-                onChange={e => setOtp(e.target.value)}
-                className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none text-center text-xl tracking-[0.5em] font-mono"
-                placeholder="000000"
-                maxLength={6}
-              />
-            </div>
-
-            {errorMsg && (
-              <p className="text-red-400 text-sm">{errorMsg}</p>
-            )}
-            
-            <button 
-              type="submit" 
-              disabled={isLoading || otp.length !== 6}
-              className="w-full h-12 bg-white text-black font-bold rounded-lg mt-6 hover:bg-zinc-200 transition-colors flex items-center justify-center disabled:opacity-70"
-            >
-              {isLoading ? "Verifying..." : "Verify & Sign In"}
-            </button>
-            
-            <button 
-              type="button"
-              onClick={() => setStep("EMAIL")}
-              className="w-full text-zinc-500 text-sm hover:text-white transition-colors mt-4"
-            >
-              Use a different email
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleSendOtp} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-3">Choose an Avatar</label>
-              <div className="flex flex-wrap gap-3 mb-4">
-                {PRESET_AVATARS.map((avatar, idx) => (
+        <form onSubmit={handleAuth} className="space-y-4">
+          {/* Only show Avatar and Username on Registration */}
+          {!isLogin && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-3">Choose an Avatar</label>
+                <div className="flex flex-wrap gap-3 mb-4">
+                  {PRESET_AVATARS.map((avatar, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedAvatar(avatar)}
+                      className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
+                        selectedAvatar === avatar ? "border-accent scale-110" : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img src={avatar} alt={`Avatar ${idx}`} className="w-full h-full bg-surface" />
+                    </button>
+                  ))}
+                  
+                  {/* Custom Upload Button */}
                   <button
-                    key={idx}
                     type="button"
-                    onClick={() => setSelectedAvatar(avatar)}
-                    className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-all ${
-                      selectedAvatar === avatar ? "border-accent scale-110" : "border-transparent opacity-70 hover:opacity-100"
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center border-2 border-dashed transition-all ${
+                      !PRESET_AVATARS.includes(selectedAvatar) ? "border-accent text-accent" : "border-white/20 text-zinc-400 hover:border-white/50"
                     }`}
                   >
-                    <img src={avatar} alt={`Avatar ${idx}`} className="w-full h-full bg-surface" />
+                    {!PRESET_AVATARS.includes(selectedAvatar) ? (
+                      <img src={selectedAvatar} alt="Custom" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <Upload className="w-5 h-5" />
+                    )}
                   </button>
-                ))}
-                
-                {/* Custom Upload Button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center border-2 border-dashed transition-all ${
-                    !PRESET_AVATARS.includes(selectedAvatar) ? "border-accent text-accent" : "border-white/20 text-zinc-400 hover:border-white/50"
-                  }`}
-                >
-                  {!PRESET_AVATARS.includes(selectedAvatar) ? (
-                    <img src={selectedAvatar} alt="Custom" className="w-full h-full rounded-full object-cover" />
-                  ) : (
-                    <Upload className="w-5 h-5" />
-                  )}
-                </button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileUpload} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-zinc-300 mb-1">Username</label>
                 <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileUpload} 
-                  accept="image/*" 
-                  className="hidden" 
+                  type="text" 
+                  required={!isLogin}
+                  value={username}
+                  onChange={e => setUsername(e.target.value)}
+                  className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none"
+                  placeholder="cinephile"
                 />
               </div>
-            </div>
+            </>
+          )}
 
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-1">Email</label>
-              <input 
-                type="email" 
-                required 
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none"
-                placeholder="you@example.com"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1">Email</label>
+            <input 
+              type="email" 
+              required 
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none"
+              placeholder="you@example.com"
+            />
+          </div>
 
-            {errorMsg && (
-              <p className="text-red-400 text-sm">{errorMsg}</p>
-            )}
-            
-            <button 
-              type="submit" 
-              disabled={isLoading || !email}
-              className="w-full h-12 bg-white text-black font-bold rounded-lg mt-6 hover:bg-zinc-200 transition-colors flex items-center justify-center disabled:opacity-70"
-            >
-              {isLoading ? "Sending Code..." : "Send Login Code"}
-            </button>
-          </form>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-zinc-300 mb-1">Password</label>
+            <input 
+              type="password" 
+              required 
+              minLength={6}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-full bg-background border border-white/10 rounded-lg h-12 px-4 text-white focus:ring-1 focus:ring-accent focus:border-accent transition-colors outline-none"
+              placeholder="••••••••"
+            />
+          </div>
+
+          {errorMsg && (
+            <p className="text-red-400 text-sm">{errorMsg}</p>
+          )}
+          
+          <button 
+            type="submit" 
+            disabled={isLoading || !email || !password || (!isLogin && !username)}
+            className="w-full h-12 bg-white text-black font-bold rounded-lg mt-6 hover:bg-zinc-200 transition-colors flex items-center justify-center disabled:opacity-70"
+          >
+            {isLoading ? "Processing..." : isLogin ? "Sign In" : "Create Account"}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-zinc-400">
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <button 
+            type="button"
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setErrorMsg("");
+            }}
+            className="text-white font-medium hover:underline"
+          >
+            {isLogin ? "Create one" : "Sign In"}
+          </button>
+        </div>
       </motion.div>
     </div>
   );
